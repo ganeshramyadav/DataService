@@ -23,7 +23,12 @@
         ],
         "psr-4": {
             "App\\": "app/"
-        }
+           
+        },
+        "files": [
+            "app/utils/dbUtils.php"
+        ]
+ 
     },
     "autoload-dev": {
         "classmap": [
