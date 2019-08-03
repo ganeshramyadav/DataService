@@ -27,9 +27,7 @@ Route::group([
   Route::post('refresh', 'AuthController@refresh');
   Route::post('me', 'AuthController@me');
 
-
 });
-
 
 // ['middleware' => 'jwt.auth'], 
 //     function() use ($router) {
@@ -43,7 +41,7 @@ Route::group([
     // return $tableName;
   });
 
-  Route::get('{tableName}/{id}','QueryController@getObject', function (){
+  Route::get('{tableName}/{idOrKey}','QueryController@getObject', function (){
     // return $tableName;
   }); 
 

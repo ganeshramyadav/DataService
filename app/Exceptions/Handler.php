@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
+use Illuminate\Database\QueryException;
+
 class Handler extends ExceptionHandler
 {
     /**
@@ -21,6 +23,7 @@ class Handler extends ExceptionHandler
         HttpException::class,
         ModelNotFoundException::class,
         ValidationException::class,
+
     ];
 
     /**
@@ -45,6 +48,28 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        if ($exception
+            instanceof
+            \Illuminate\Database\Eloquent\ModelNotFoundException) 
+        {
+        
+            return response()->json(['error'=>"Record {".$exception->getIds()[0]."} not found for object {".$exception->getModel()."}",
+            'status'=>404,
+            'created_at'=> date("Y/m/d h:i:s"),
+            'method'=>$request->method()
+            ])
+            ->setStatusCode(404);
+        }else if($exception instanceof QueryException)
+        {   
+            return response()->json(['error'=>$exception->getMessage(),
+            'status'=>500,
+            'created_at'=> date("Y/m/d h:i:s"),
+            'method'=>$request->method()
+            ])
+            ->setStatusCode(500);
+        }
+
         return parent::render($request, $exception);
+
     }
 }

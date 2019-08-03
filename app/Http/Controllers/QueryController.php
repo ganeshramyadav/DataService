@@ -2,47 +2,35 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\DataUtilsController;
+use Illuminate\Database\QueryException As Exception;
 use Illuminate\Http\Request;
+use App\Utils\DbUtils ;
 
 
-
-
-// use Illuminate\Support\Facades\DB;
-// use Illuminate\Database\QueryException;
-// use DB;
-
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Routing\ResponseFactory;
 
 class QueryController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
+    public function getObject(Request $request, $tableName = null, $idOrKey = null, $select = null, $where = null, $orderBy = null){
+      
+        $select = $request->input('select');
+        $where = $request->input('where');
+        $orderBy = $request->input('orderBy');
+
+        try { 
+            if(empty($tableName)){
+                return "Object not found!";
+            }
+
+            $result = DbUtils::generateQuery($tableName,$idOrKey,$select,$where,$orderBy);
+            return response()->json(['data'=>$result])->setStatusCode(200);
+
+        } catch(Exception $ex){
+            throw $ex;
+        }
     }
 
-    public function getObject(Request $request, $tableName = null, $id = null, $select = null, $where = null){
-        $qureyInfo = $request->all();
-        // $selects = $_GET['select'];//$request->input('select');
-        // echo $select;
-        print_r($select);
-        // print_r($where);
-
-        die;
-
-        $result = (new DataUtilsController)->genericSelect($tableName,$qureyInfo,$id);
-        return (['results'=>$result]);
-     }
-
-/*    public function getUserPosts($id)
-    {
-        $user = User::find($id)->posts()->get();
-        return ($user);
-        
-    } */
 }
 
 
