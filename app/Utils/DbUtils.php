@@ -11,31 +11,30 @@ class DbUtils
 {
     private $test;
     
-    public static function generateQuery($objName,$idOrKey=null, $select = null, $where = null, $orderBy = null){
+    public static function generateQuery($objName,$idOrKey=null, $select = null, $where = null, $orderBy = null)
+    {
         $query = DB::table($objName);
-        echo "<pre>";
-            if(!empty($idOrKey) || $idOrKey != null){
-                $query = DbUtils::generateSelect($query,"all");
-                $result = $query->where(['id'=> $idOrKey])->orwhere(['key'=>$idOrKey])->first();
+        if(!empty($idOrKey) || $idOrKey != null){
+            $query = DbUtils::generateSelect($query,"all");
+            $result = $query->where(['id'=> $idOrKey])->orwhere(['key'=>$idOrKey])->first();
 
-                if (!empty($result)){
-                    return $result;
-                }else{
-                    throw (new ModelNotFoundException)->setModel($objName, $idOrKey);
-                }
-                
-            }elseif(!empty($where) || $where != null){
-                $query = DbUtils::generateSelect($query, $select);
-                $query = DbUtils::generateWhere($query, $where);
-
-                if(!empty($orderBy) || $orderBy != null){
-                    $query = DbUtils::generateOrderSort($query, $orderBy);
-                }
-                $query = $query->get();
-
-                return $query;
+            if (!empty($result)){
+                return $result;
+            }else{
+                throw (new ModelNotFoundException)->setModel($objName, $idOrKey);
             }
+            
+        }elseif(!empty($where) || $where != null){
+            $query = DbUtils::generateSelect($query, $select);
+            $query = DbUtils::generateWhere($query, $where);
+
+            if(!empty($orderBy) || $orderBy != null){
+                $query = DbUtils::generateOrderSort($query, $orderBy);
+            }
+            $query = $query->get();
+            return $query;
         }
+    }
 
     public static function generateSelect($query,$select = null)
     {
