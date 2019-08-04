@@ -30,7 +30,6 @@ class DbUtils
 
                 if(!empty($orderBy) || $orderBy != null){
                     $query = DbUtils::generateOrderSort($query, $orderBy);
-                    // $query = $query->orderBy('id', 'desc')->get();
                 }
                 $query = $query->get();
 
