@@ -11,25 +11,30 @@ class DbUtils
 {
     private $test;
     
-    public static function generateQuery($objName,$idOrKey=null, $select = null, $where = null, $orderBy = null){
+    public static function generateQuery($objName,$idOrKey=null, $select = null, $where = null, $orderBy = null)
+    {
         $query = DB::table($objName);
+        if(!empty($idOrKey) || $idOrKey != null){
+            $query = DbUtils::generateSelect($query,"all");
+            $result = $query->where(['id'=> $idOrKey])->orwhere(['key'=>$idOrKey])->first();
 
-            if(!empty($idOrKey) || $idOrKey != null){
-                $query = DbUtils::generateSelect($query,"all");
-                $result = $query->where(['id'=> $idOrKey])->orwhere(['key'=>$idOrKey])->first();
-
-                if (!empty($result)){
-                    return $result;
-                }else{
-                    throw (new ModelNotFoundException)->setModel($objName, $idOrKey);
-                }
-                
-            }elseif(!empty($where) || $where != null){
-                $query = DbUtils::generateSelect($query, $select);
-                $result = DbUtils::generateWhere($query, $where)->get();
+            if (!empty($result)){
                 return $result;
+            }else{
+                throw (new ModelNotFoundException)->setModel($objName, $idOrKey);
             }
+            
+        }elseif(!empty($where) || $where != null){
+            $query = DbUtils::generateSelect($query, $select);
+            $query = DbUtils::generateWhere($query, $where);
+
+            if(!empty($orderBy) || $orderBy != null){
+                $query = DbUtils::generateOrderSort($query, $orderBy);
+            }
+            $query = $query->get();
+            return $query;
         }
+    }
 
     public static function generateSelect($query,$select = null)
     {
@@ -104,5 +109,19 @@ class DbUtils
         }
         return $whereArray;
 
+    }
+
+    public static function generateOrderSort($query, $orderBy)
+    {
+        if($orderBy[0] == '-'){
+            $record = explode('-',$orderBy);
+            $query = $query->orderBy($record[1], 'desc');
+        }elseif($orderBy[0] == ' '){
+            $record = explode(' ',$orderBy);
+            $query = $query->orderBy($record[1]);
+        }else{
+            $query = $query->orderBy($orderBy);
+        }
+        return $query;
     }
 }
