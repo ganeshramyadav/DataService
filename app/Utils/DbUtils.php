@@ -13,7 +13,7 @@ class DbUtils
     
     public static function generateQuery($objName,$idOrKey=null, $select = null, $where = null, $orderBy = null){
         $query = DB::table($objName);
-
+        echo "<pre>";
             if(!empty($idOrKey) || $idOrKey != null){
                 $query = DbUtils::generateSelect($query,"all");
                 $result = $query->where(['id'=> $idOrKey])->orwhere(['key'=>$idOrKey])->first();
@@ -26,8 +26,15 @@ class DbUtils
                 
             }elseif(!empty($where) || $where != null){
                 $query = DbUtils::generateSelect($query, $select);
-                $result = DbUtils::generateWhere($query, $where)->get();
-                return $result;
+                $query = DbUtils::generateWhere($query, $where);
+
+                if(!empty($orderBy) || $orderBy != null){
+                    $query = DbUtils::generateOrderSort($query, $orderBy);
+                    // $query = $query->orderBy('id', 'desc')->get();
+                }
+                $query = $query->get();
+
+                return $query;
             }
         }
 
@@ -104,5 +111,19 @@ class DbUtils
         }
         return $whereArray;
 
+    }
+
+    public static function generateOrderSort($query, $orderBy)
+    {
+        if($orderBy[0] == '-'){
+            $record = explode('-',$orderBy);
+            $query = $query->orderBy($record[1], 'desc');
+        }elseif($orderBy[0] == ' '){
+            $record = explode(' ',$orderBy);
+            $query = $query->orderBy($record[1]);
+        }else{
+            $query = $query->orderBy($orderBy);
+        }
+        return $query;
     }
 }
