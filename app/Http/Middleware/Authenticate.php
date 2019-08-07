@@ -35,6 +35,15 @@ class Authenticate
      */
     public function handle($request, Closure $next, $guard = null)
     {
+        /* return app(Authenticate::class)->handle($request, function ($request) use ($next) {
+            //Put your awesome stuff there. Like:
+            if ($someTestsFails) {
+                return redirect()->login();
+            }
+
+            //Then process the next request if every tests passed.
+            return $next($request);
+        }); */
         if ($this->auth->guard($guard)->guest()) {
             return response('Unauthorized.', 401);
         }

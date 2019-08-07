@@ -8,9 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class DbUtils
-{
-    private $test;
-    
+{    
     public static function generateQuery($objName,$idOrKey=null, $select = null, $where = null, $orderBy = null)
     {
         $query = DB::table($objName);
@@ -23,7 +21,6 @@ class DbUtils
             }else{
                 throw (new ModelNotFoundException)->setModel($objName, $idOrKey);
             }
-            
         }elseif(!empty($where) || $where != null){
             $query = DbUtils::generateSelect($query, $select);
             $query = DbUtils::generateWhere($query, $where);
@@ -108,7 +105,6 @@ class DbUtils
             }
         }
         return $whereArray;
-
     }
 
     public static function generateOrderSort($query, $orderBy)
