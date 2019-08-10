@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Contracts\Auth\Factory as Auth;
+use Illuminate\Http\Request As Request;
 
 class Authenticate
 {
@@ -35,19 +36,39 @@ class Authenticate
      */
     public function handle($request, Closure $next, $guard = null)
     {
-        /* return app(Authenticate::class)->handle($request, function ($request) use ($next) {
-            //Put your awesome stuff there. Like:
-            if ($someTestsFails) {
-                return redirect()->login();
-            }
-
-            //Then process the next request if every tests passed.
-            return $next($request);
-        }); */
-        if ($this->auth->guard($guard)->guest()) {
-            return response('Unauthorized.', 401);
+        $result = $this->callIdentityCurlService($request);
+        if($result->status() == 401){
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
-
         return $next($request);
     }
+
+    public function callIdentityCurlService(Request $request){
+        $identityUrl = env('IDENTITY_URL');
+        $authorization = $request->header('authorization');
+
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $identityUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $headers = array();
+        $headers[] = 'Content-Type: application/json';
+        $headers[] = 'Authorization: '.$authorization;
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+        }
+        curl_close($ch);
+
+        if($httpcode === 401){
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }else{
+            return response()->json(['message' => 'Authorized'], 200);
+        }
+    } 
 }
