@@ -15,7 +15,6 @@ class DbUtils
         if(!empty($idOrKey) || $idOrKey != null){
             $query = DbUtils::generateSelect($query,"all");
             $result = $query->where(['id'=> $idOrKey])->orwhere(['key'=>$idOrKey])->first();
-
             if (!empty($result)){
                 return $result;
             }else{
@@ -119,5 +118,27 @@ class DbUtils
             $query = $query->orderBy($orderBy);
         }
         return $query;
+    }
+
+    public static function generateDelete($objName, $idOrKey = null, $where = null)
+    {
+        $query = DB::table($objName);
+        if(!empty($idOrKey) || $idOrKey != null){
+            // Delete One Reocord From Table
+            $result = $query->where(['id'=> $idOrKey])->orwhere(['key'=>$idOrKey])->delete();
+            if (!empty($result)){
+                return $result;
+            }else{
+                throw (new ModelNotFoundException)->setModel($objName, $idOrKey);
+            }
+        }elseif(!empty($where) || $where != null){
+            $query = DbUtils::generateWhere($query, $where);
+            if(!empty($orderBy) || $orderBy != null){
+                // Delete Multiple/Bulk Reocords With Condition From Table
+                $query = DbUtils::generateOrderSort($query, $orderBy);
+            }
+            $query = $query->delete();
+            return $query;
+        }
     }
 }

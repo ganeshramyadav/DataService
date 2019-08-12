@@ -16,9 +16,13 @@ $router->get('/', function () use ($router) {
 });
 
 Route::group([
-  'middleware' => ['auth']
+  'middleware' => ['auth'],
+  'prefix'=>'data/v1'
 ],function(){
-  Route::get('data/{tableName}','QueryController@getObject');
-  Route::get('data/{tableName}/{idOrKey}','QueryController@getObject'); 
+  Route::get('/','QueryController@RecordList');
+  Route::get('/{tableName}','QueryController@RecordList');
+  Route::get('/{tableName}/{idOrKey}','QueryController@GetRecord');
+
+  Route::delete('/{tableName}/{idOrKey}','QueryController@DeleteRecord');
 }); 
 
