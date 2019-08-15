@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\DataUtilsController;
 use Illuminate\Database\QueryException As Exception;
 use Illuminate\Http\Request As Request;
-use App\Utils\DbUtils ;
-
-
+use StackUtil\Utils\DbUtils;
+use StackUtil\Utils\ApiUtils;
+use StackUtil\Utils\Utility;
+use App\Utils\MetadataUtils;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Routing\ResponseFactory;
 
@@ -18,6 +19,16 @@ class QueryController extends Controller
         $where = $request->input('where');
         $orderBy = $request->input('orderBy');
 
+        $Url = env('METADATA_URL');
+        $headers[] = 'Content-Type: application/json';
+        $headers[] = 'Authorization: '.$request->header('Authorization');
+        
+        
+        $result = ApiUtils::Request('GET', $Url.'/metadata/v1?key='.$tableName, $headers, null);
+        $metadata = $result->getData(true);   
+        $object = MetadataUtils::GetObject($metadata,$tableName);
+        $fileName = MetadataUtils::GetField($metadata,$tableName,'name');
+        return $fileName;
         try { 
             if(empty($tableName)){
                 return "Object not found!";

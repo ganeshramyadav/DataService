@@ -45,7 +45,7 @@ class Authenticate
 
     public function callIdentityCurlService(Request $request){
         $identityUrl = env('IDENTITY_URL');
-        $authorization = $request->header('authorization');
+        $authorization = $request->header('Authorization');
 
         $ch = curl_init();
         
