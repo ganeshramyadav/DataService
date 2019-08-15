@@ -6,6 +6,8 @@ use Closure;
 use Illuminate\Contracts\Auth\Factory as Auth;
 use Illuminate\Http\Request As Request;
 
+use StackUtil\Utils\ApiUtils;
+
 class Authenticate
 {
     /**
@@ -34,41 +36,22 @@ class Authenticate
      * @param  string|null  $guard
      * @return mixed
      */
-    public function handle($request, Closure $next, $guard = null)
+    public function handle(Request $request, Closure $next, $guard = null)
     {
-        $result = $this->callIdentityCurlService($request);
-        if($result->status() == 401){
-            return response()->json(['error' => 'Unauthorized'], 401);
+        
+        $identityUrl = env('IDENTITY_URL');
+        $head['authorization'] = $request->header('authorization');
+        $head['contentType'] = $request->header('content-type');
+        $method = $request->getMethod();
+        $body = $request;
+
+        $result = ApiUtils::Request($method, $identityUrl, $head, $body);
+       
+        if($result->status() == 200){
+            return $next($request);
+        }else{
+            return $result;
         }
-        return $next($request);
     }
 
-    public function callIdentityCurlService(Request $request){
-        $identityUrl = env('IDENTITY_URL');
-        $authorization = $request->header('authorization');
-
-        $ch = curl_init();
-        
-        curl_setopt($ch, CURLOPT_URL, $identityUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $headers = array();
-        $headers[] = 'Content-Type: application/json';
-        $headers[] = 'Authorization: '.$authorization;
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $result = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
-        if (curl_errno($ch)) {
-            echo 'Error:' . curl_error($ch);
-        }
-        curl_close($ch);
-
-        if($httpcode === 401){
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }else{
-            return response()->json(['message' => 'Authorized'], 200);
-        }
-    } 
 }

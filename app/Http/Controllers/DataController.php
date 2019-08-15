@@ -1,24 +1,30 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\DataUtilsController;
 use Illuminate\Database\QueryException As Exception;
 use Illuminate\Http\Request As Request;
-use App\Utils\DbUtils ;
 
+use StackUtil\Utils\ApiUtils;
+use StackUtil\Utils\DbUtils;
 
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Routing\ResponseFactory;
-
-class QueryController extends Controller
+class DataController extends Controller
 {
     public function RecordList(Request $request, $tableName, $select = null, $where = null, $orderBy = null){
-      
+
         $select = $request->input('select');
         $where = $request->input('where');
         $orderBy = $request->input('orderBy');
 
-        try { 
+        $Url = env('METADATA_URL');
+        $head['authorization'] = $request->header('authorization');
+        $head['contentType'] = $request->header('content-type');
+        
+        // $result = ApiUtils::Request('GET', $Url.'metadata/v1?key='.$tableName, $head, null);
+        
+       
+        
+
+        try {
             if(empty($tableName)){
                 return "Object not found!";
             }
@@ -35,7 +41,7 @@ class QueryController extends Controller
         $where = $request->input('where');
         $orderBy = $request->input('orderBy');
 
-        try { 
+        try {
             if(empty($tableName)){
                 return "Object not found!";
             }
@@ -46,10 +52,10 @@ class QueryController extends Controller
             throw $ex;
         }
     }
-	
+
 	public function DeleteRecord(Request $request, $tableName, $idOrKey){
         $where = $request->input('where');
-        try { 
+        try {
             if(empty($tableName)){
                 return "Object not found!";
             }
@@ -61,8 +67,14 @@ class QueryController extends Controller
         }
         return 'true';
     }
-	
-	// public function BulkInsert($request, $tableName, $idOrKey){}
+
+    // public function BulkInsert($request, $tableName, $idOrKey){}
+
+
+        public function insertR(Request $request, $tableName){
+
+
+        }
 }
 
 
