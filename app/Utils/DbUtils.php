@@ -27,9 +27,9 @@ class DbUtils
             if(!empty($orderBy) || $orderBy != null){
                 $query = DbUtils::generateOrderSort($query, $orderBy);
             }
-            $query = $query->get();
-            return $query;
         }
+        $query = $query->get();
+        return $query;
     }
 
     public static function generateSelect($query,$select = null)
