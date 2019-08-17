@@ -10,7 +10,6 @@ use StackUtil\Utils\Utility;
 use App\Utils\MetadataUtils;
 
 
-
 class DataController extends Controller{
 
     public function RecordList(Request $request, $tableName, $select = null, $where = null, $orderBy = null){
@@ -67,23 +66,16 @@ class DataController extends Controller{
             if(empty($tableName)){
                 return "Object not found!";
             }
-
             $metadata = MetadataUtils::CallMetaData($request, $tableName);
-
-            foreach ($data as $keys => $value){
-                $object = MetadataUtils::GetObject($metadata,$tableName);
-                $fileName = MetadataUtils::GetField($metadata,$tableName,$keys);
-            }
-            
-            $data['id'] = Utility::generateId('s',$object['short_name']);
-            $data['key'] = Utility::generateKey($object['short_name']);
-
-            $result = DbUtils::generateInsert($tableName, $data);
-            if($result == 1){
-                $insertedRecord = DbUtils::generateQuery($tableName,$data['id']);
-                return response()->json($insertedRecord)->setStatusCode(201);
-            }else{
-                return response()->json(['error'=>$result])->setStatusCode(500);
+            $data = MetadataUtils::ValidateRequest($request, $metadata, $tableName, $data);
+            if(isset($data)){
+                $result = DbUtils::generateInsert($tableName, $data);
+                if($result){
+                    $insertedRecord = DbUtils::generateQuery($tableName,$data['id']);
+                    return response()->json($insertedRecord)->setStatusCode(201);
+                }else{
+                    return response()->json(['error'=>$result])->setStatusCode(500);
+                }
             }
         } catch(Exception $ex){
             throw $ex;

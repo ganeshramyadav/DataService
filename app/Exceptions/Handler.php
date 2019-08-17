@@ -67,6 +67,13 @@ class Handler extends ExceptionHandler
             'method'=>$request->method()
             ])
             ->setStatusCode(500);
+        }else{
+            return response()->json(['error'=>$exception->getMessage(),
+            'status'=>$exception->getCode(),
+            'created_at'=> date("Y/m/d h:i:s"),
+            'method'=>$request->method()
+            ])
+            ->setStatusCode($exception->getCode());
         }
 
         return parent::render($request, $exception);
