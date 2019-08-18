@@ -3,6 +3,7 @@ namespace App\Utils;
 
 use StackUtil\Utils\ApiUtils;
 use StackUtil\Utils\Utility;
+use StackUtil\Utils\DbUtils;
 use Exception;
 
 class MetadataUtils {
@@ -44,7 +45,7 @@ class MetadataUtils {
 
         switch ($method) {
             case 'GET':
-                validateGetRequest();
+                $validate = MetadataUtils::validateGetRequest($request, $metadata, $objectName);
                 break;
             case 'POST':
                 $validate = MetadataUtils::validatePostRequest($metadata, $objectName, $data, true);
@@ -56,9 +57,30 @@ class MetadataUtils {
         return $validate; 
     }
 
-    public static function validateGetRequest()
+    public static function validateGetRequest($request, $metadata, $objectName)
     {
-        return 'validateGetRequest';
+        $select = $request->input('select');
+        $where = $request->input('where');
+        $orderBy = $request->input('orderBy');
+
+        $validatioData = array();
+        if(isset($select)){
+            $selectArray = DbUtils::generateSelect( null , $select );
+            $validatioData = array_merge($validatioData, $selectArray);
+        }
+        if(isset($where)){
+            $whereArray = DbUtils::generateWhere( null ,$where );
+            $validatioData = array_merge($validatioData, $whereArray);
+        }
+        if(isset($orderBy)){
+            $orderByArray = (array)DbUtils::generateOrderSort( null ,$orderBy );
+            $validatioData = array_merge($validatioData, $orderByArray);
+        }
+        
+        foreach ($validatioData as $keys){
+            $fileName = MetadataUtils::GetField($metadata,$objectName,$keys);
+        }
+        return $fileName;
     }
 
     public static function validatePostRequest($metadata, $objectName, $data, $isMandatoryCheck)
@@ -108,7 +130,6 @@ class MetadataUtils {
         if(isset($metadata['error'])){
             throw new Exception($metadata['error'],$metadata['status']);
         }
-        
         return $metadata;
     }
 }
