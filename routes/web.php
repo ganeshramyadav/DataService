@@ -17,7 +17,8 @@ Route::group([
     Route::delete('/{tableName}/{idOrKey}','DataController@DeleteRecord');
 
     Route::post('/{tableName}', 'DataController@InsertRecord');
-    Route::patch('/{tableName}', 'DataController@UpdateRecord');
+    Route::patch('/{tableName}/{idOrKey}', 'DataController@UpdateRecord');
+    Route::put('/{tableName}', 'DataController@PutRecord');
 
 
 });
