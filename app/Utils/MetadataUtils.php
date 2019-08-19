@@ -3,6 +3,7 @@ namespace App\Utils;
 
 use StackUtil\Utils\ApiUtils;
 use StackUtil\Utils\Utility;
+use StackUtil\Utils\DbUtils;
 use Exception;
 
 class MetadataUtils {
@@ -44,7 +45,7 @@ class MetadataUtils {
 
         switch ($method) {
             case 'GET':
-                validateGetRequest();
+                $validate = MetadataUtils::validateGetRequest($request, $metadata, $objectName);
                 break;
             case 'POST':
                 $validate = MetadataUtils::validatePostRequest($metadata, $objectName, $data, true);
@@ -53,18 +54,46 @@ class MetadataUtils {
                 $validate = MetadataUtils::validatePostRequest($metadata, $objectName, $data, false);
                 break;
         }
-        return $validate; 
+        return $validate;
     }
 
-    public static function validateGetRequest()
+    public static function ValidateGetRequest($request, $metadata, $objectName)
     {
-        return 'validateGetRequest';
+        $select = $request->input('select');
+        $where = $request->input('where');
+        $orderBy = $request->input('orderBy');
+
+        if(isset($select)){
+            $selectResult = explode( ",", $select );
+            foreach ($selectResult as $keys){
+                $fileName = MetadataUtils::GetField($metadata, $objectName, $keys);
+            }
+        }
+
+        if(isset($where)){
+            $whereResult = explode( ",", $where );
+            $whereArray = DbUtils::generateKeyValueWithOperators($whereResult);
+            foreach ($whereArray as $keys){
+                $fileName = MetadataUtils::GetField($metadata, $objectName, $keys['key']);
+            }
+        }
+
+        if(isset($orderBy)){
+            $orderByResult = explode( ",", $orderBy);
+            foreach ($orderByResult as $keys){
+                if($keys[0] == '-'){
+                    $fileName = MetadataUtils::GetField($metadata, $objectName, ltrim($keys,'-'));
+                }else{
+                    $fileName = MetadataUtils::GetField($metadata, $objectName, ltrim($keys));
+                }
+            }
+        }
+        return $fileName;
     }
 
-    public static function validatePostRequest($metadata, $objectName, $data, $isMandatoryCheck)
+    public static function ValidatePostRequest($metadata, $objectName, $data, $isMandatoryCheck)
     {
         $object = MetadataUtils::GetObject($metadata,$objectName);
-
         //validated fields check column exist in tfield
         foreach ($data as $keys => $value){
             $fileName = MetadataUtils::GetField($metadata,$objectName,$keys);
@@ -74,7 +103,7 @@ class MetadataUtils {
         }else{
             return $data;
         }
-        
+
     }
 
     public static function ValidateMandatoryFields($object, $data)
@@ -108,7 +137,6 @@ class MetadataUtils {
         if(isset($metadata['error'])){
             throw new Exception($metadata['error'],$metadata['status']);
         }
-        
         return $metadata;
     }
 }

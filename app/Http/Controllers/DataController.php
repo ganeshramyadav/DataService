@@ -5,8 +5,6 @@ use Illuminate\Database\QueryException As Exception;
 use Illuminate\Http\Request As Request;
 
 use StackUtil\Utils\DbUtils;
-use StackUtil\Utils\ApiUtils;
-use StackUtil\Utils\Utility;
 use App\Utils\MetadataUtils;
 
 
@@ -21,7 +19,11 @@ class DataController extends Controller{
             if(empty($tableName)){
                 return "Object not found!";
             }
+            $metadata = MetadataUtils::CallMetaData($request, $tableName);
+            MetadataUtils::ValidateRequest($request, $metadata, $tableName, null);
+
             $result = DbUtils::generateQuery($tableName,null,$select,$where,$orderBy);
+
             return response()->json(['object'=>$result])->setStatusCode(200);
         } catch(Exception $ex){
             throw $ex;
@@ -37,6 +39,7 @@ class DataController extends Controller{
             if(empty($tableName)){
                 return "Object not found!";
             }
+
             $result = DbUtils::generateQuery($tableName,$idOrKey,$select,$where,$orderBy);
             return response()->json($result)->setStatusCode(200);
 
@@ -67,11 +70,11 @@ class DataController extends Controller{
                 return "Object not found!";
             }
             $metadata = MetadataUtils::CallMetaData($request, $tableName);
-            $data = MetadataUtils::ValidateRequest($request, $metadata, $tableName, $data);
-            if(isset($data)){
-                $result = DbUtils::generateInsert($tableName, $data);
+            $datas = MetadataUtils::ValidateRequest($request, $metadata, $tableName, $data);
+            if(isset($datas)){
+                $result = DbUtils::generateInsert($tableName, $datas);
                 if($result){
-                    $insertedRecord = DbUtils::generateQuery($tableName,$data['id']);
+                    $insertedRecord = DbUtils::generateQuery($tableName,$datas['id']);
                     return response()->json($insertedRecord)->setStatusCode(201);
                 }else{
                     return response()->json(['error'=>$result])->setStatusCode(500);
@@ -81,4 +84,30 @@ class DataController extends Controller{
             throw $ex;
         }
     }
+
+    public function UpdateRecord(Request $request, $tableName, $idOrKey){
+        $data = $request->all();
+
+        try {
+            if(empty($tableName)){
+                return "Object not found!";
+            }
+
+            $metadata = MetadataUtils::CallMetaData($request, $tableName);
+            $data = MetadataUtils::ValidateRequest($request, $metadata, $tableName, $data);
+
+            $result = DbUtils::generateUpdateRecord($request, $tableName, $idOrKey);
+            $updatedRecord = DbUtils::generateQuery($tableName ,$idOrKey);
+
+            if($updatedRecord){
+                return response()->json($updatedRecord)->setStatusCode(200);
+            }else{
+                return response()->json(['error'=>$updatedRecord])->setStatusCode(500);
+            }
+        } catch(Exception $ex){
+            throw $ex;
+        }
+
+    }
+
 }
