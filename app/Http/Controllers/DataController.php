@@ -14,16 +14,13 @@ class DataController extends Controller{
         $select = $request->input('select');
         $where = $request->input('where');
         $orderBy = $request->input('orderBy');
-
         try {
             if(empty($tableName)){
                 return "Object not found!";
             }
             $metadata = MetadataUtils::CallMetaData($request, $tableName);
             MetadataUtils::ValidateRequest($request, $metadata, $tableName, null);
-
             $result = DbUtils::generateQuery($tableName,null,$select,$where,$orderBy);
-
             return response()->json(['object'=>$result])->setStatusCode(200);
         } catch(Exception $ex){
             throw $ex;
@@ -34,15 +31,12 @@ class DataController extends Controller{
         $select = $request->input('select');
         $where = $request->input('where');
         $orderBy = $request->input('orderBy');
-
         try {
             if(empty($tableName)){
                 return "Object not found!";
             }
-
             $result = DbUtils::generateQuery($tableName,$idOrKey,$select,$where,$orderBy);
             return response()->json($result)->setStatusCode(200);
-
         } catch(Exception $ex){
             throw $ex;
         }
@@ -87,18 +81,15 @@ class DataController extends Controller{
 
     public function UpdateRecord(Request $request, $tableName, $idOrKey){
         $data = $request->all();
-
         try {
             if(empty($tableName)){
                 return "Object not found!";
             }
-
             $metadata = MetadataUtils::CallMetaData($request, $tableName);
             $data = MetadataUtils::ValidateRequest($request, $metadata, $tableName, $data);
 
             $result = DbUtils::generateUpdateRecord($request, $tableName, $idOrKey);
             $updatedRecord = DbUtils::generateQuery($tableName ,$idOrKey);
-
             if($updatedRecord){
                 return response()->json($updatedRecord)->setStatusCode(200);
             }else{
@@ -107,7 +98,6 @@ class DataController extends Controller{
         } catch(Exception $ex){
             throw $ex;
         }
-
     }
 
 }

@@ -6,6 +6,14 @@ use Closure;
 use Illuminate\Contracts\Auth\Factory as Auth;
 use Illuminate\Http\Request As Request;
 
+use Illuminate\Http\Response;
+
+use StackUtil\Utils\DbUtils;
+use App\Utils\MetadataUtils;
+use StackUtil\Utils\Utility;
+use Exception;
+
+
 class Authenticate
 {
     /**
@@ -37,38 +45,59 @@ class Authenticate
     public function handle($request, Closure $next, $guard = null)
     {
         $result = $this->callIdentityCurlService($request);
-        if($result->status() == 401){
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-        return $next($request);
+        $result = json_decode($result);
+        $response = $next($request);
+        $userId = $result->id;
+        Authenticate::history($request, $response,  $userId);
+        return $response;
     }
 
-    public function callIdentityCurlService(Request $request){
-        $identityUrl = env('IDENTITY_URL');
+    public function history($request, $response = null , $userId)
+    {
+        if ( env('API_DATALOGGER', true) ) {
+            $endTime = microtime(true);
+            $tableName = 'history';
+            $dataToLog['user_id'] = $userId;
+            $dataToLog['name'] = 'User_Name';
+            $dataToLog['time'] =  gmdate("F j, Y, g:i a");
+            $dataToLog['duration'] =  number_format($endTime - LUMEN_START, 3);
+            $dataToLog['ipaddress'] =  $request->ip();
+            $dataToLog['url'] =    $request->fullUrl();
+            $dataToLog['method'] = $request->method();
+            $dataToLog['input'] =  $request->getContent();
+            $dataToLog['output'] = $response->getContent();
+            $dataToLog['status_code'] = $response->getStatusCode();
+            $metadata = MetadataUtils::CallMetaData($request, $tableName);
+            $object = MetadataUtils::GetObject($metadata,$tableName);
+            $dataToLog['id'] = Utility::generateId('s',$object['short_name']);
+            $dataToLog['key'] = Utility::generateKey('s',$object['short_name']);
+            $result = DbUtils::generateInsert($tableName,$dataToLog);
+        }
+    }
+
+    public function callIdentityCurlService(Request $request)
+    {
+        $identityUrl = env('IDENTITY_URL').'auth/v1/authCheck?skipAuth=true';
         $authorization = $request->header('authorization');
 
         $ch = curl_init();
-        
+
         curl_setopt($ch, CURLOPT_URL, $identityUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
         $headers = array();
         $headers[] = 'Content-Type: application/json';
         $headers[] = 'Authorization: '.$authorization;
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
         $result = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
         if (curl_errno($ch)) {
             echo 'Error:' . curl_error($ch);
         }
         curl_close($ch);
-
         if($httpcode === 401){
-            return response()->json(['error' => 'Unauthorized'], 401);
+            throw new Exception('Unauthourized',401);
         }else{
-            return response()->json(['message' => 'Authorized'], 200);
+            return $result;
         }
-    } 
+    }
 }
