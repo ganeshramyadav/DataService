@@ -70,14 +70,14 @@ class Authenticate
             $metadata = MetadataUtils::CallMetaData($request, $tableName);
             $object = MetadataUtils::GetObject($metadata,$tableName);
             $dataToLog['id'] = Utility::generateId('s',$object['short_name']);
-            $dataToLog['key'] = Utility::generateKey('s',$object['short_name']);
+            $dataToLog['key'] = Utility::generateKey($object['short_name']);
             $result = DbUtils::generateInsert($tableName,$dataToLog);
         }
     }
 
     public function callIdentityCurlService(Request $request)
     {
-        $identityUrl = env('IDENTITY_URL').'auth/v1/authCheck?skipAuth=true';
+        $identityUrl = env('IDENTITY_URL').'auth/v1/authCheck';
         $authorization = $request->header('authorization');
 
         $ch = curl_init();
