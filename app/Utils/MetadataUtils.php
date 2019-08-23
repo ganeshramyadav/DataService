@@ -129,6 +129,7 @@ class MetadataUtils {
         $Url = env('METADATA_URL');
         $headers[] = 'Content-Type: application/json';
         $headers[] = 'Authorization: '.$request->header('Authorization');
+        $headers[] = 'skipAuth: ture';
 
         $result = ApiUtils::Request('GET', $Url.'/metadata/v1?key='.$objectName, $headers, null);
         $metadata = $result->getData(true);
