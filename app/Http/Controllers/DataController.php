@@ -11,14 +11,28 @@ use App\Utils\MetadataUtils;
 class DataController extends Controller{
 
     public function RecordList(Request $request, $tableName, $select = null, $where = null, $orderBy = null){
+
+        // get ResponsibilityId from jwt token
+        // return $responsibilityId = MetadataUtils::GetUserDetails($request);
+
+        $responsibilityId = 'sres45o0ajqziwbsmp937nyu';
+
         $select = $request->input('select');
         $where = $request->input('where');
         $orderBy = $request->input('orderBy');
         try {
             if(empty($tableName)){
-                return "Object not found!";
+                return response()->json('Object not found!')->setStatusCode(404);
             }
+            // getMetadat of objects (ie. 'account')
             $metadata = MetadataUtils::CallMetaData($request, $tableName);
+
+            // getResponsibilityMetadat of objects (ie. 'account')
+            $getResponsibilityMetadata = MetadataUtils::GetResponsibility($request, $responsibilityId);
+
+            // CheckResponsibility
+            $checkResponsibility = MetadataUtils::ValidateResponsibility($request, $getResponsibilityMetadata, $metadata, $tableName);
+
             MetadataUtils::ValidateRequest($request, $metadata, $tableName, null);
             $result = DbUtils::generateQuery($tableName,null,$select,$where,$orderBy);
             return response()->json(['object'=>$result])->setStatusCode(200);
@@ -31,10 +45,23 @@ class DataController extends Controller{
         $select = $request->input('select');
         $where = $request->input('where');
         $orderBy = $request->input('orderBy');
+        $responsibilityId = 'sres45o0ajqziwbsmp937nyu';
+
         try {
             if(empty($tableName)){
-                return "Object not found!";
+                return response()->json('Object not found!')->setStatusCode(404);
             }
+            // getMetadat of objects (ie. 'account')
+            $metadata = MetadataUtils::CallMetaData($request, $tableName);
+
+            // getResponsibilityMetadat of objects (ie. 'account')
+            $getResponsibilityMetadata = MetadataUtils::GetResponsibility($request, $responsibilityId);
+
+            // CheckResponsibility
+            $checkResponsibility = MetadataUtils::ValidateResponsibility($request, $getResponsibilityMetadata, $metadata, $tableName);
+
+            MetadataUtils::ValidateRequest($request, $metadata, $tableName, null);
+
             $result = DbUtils::generateQuery($tableName,$idOrKey,$select,$where,$orderBy);
             return response()->json($result)->setStatusCode(200);
         } catch(Exception $ex){
@@ -44,26 +71,50 @@ class DataController extends Controller{
 
 	public function DeleteRecord(Request $request, $tableName, $idOrKey){
         $where = $request->input('where');
+        $responsibilityId = 'sres45o0ajqziwbsmp937nyu';
+
         try {
             if(empty($tableName)){
-                return "Object not found!";
+                return response()->json('Object not found!')->setStatusCode(404);
             }
-            $result = DbUtils::generateDelete($tableName, $idOrKey, $where);
-            return response()->json(['message'=>'Record Deleted Successfully.'])->setStatusCode(200); //delete 204 => no content, 200=>with content;
+            // getMetadat of objects (ie. 'account')
+            $metadata = MetadataUtils::CallMetaData($request, $tableName);
 
+            // getResponsibilityMetadat of objects (ie. 'account')
+            $getResponsibilityMetadata = MetadataUtils::GetResponsibility($request, $responsibilityId);
+
+            // CheckResponsibility
+            $checkResponsibility = MetadataUtils::ValidateResponsibility($request, $getResponsibilityMetadata, $metadata, $tableName);
+
+            MetadataUtils::ValidateRequest($request, $metadata, $tableName, null);
+
+            $result = DbUtils::generateDeleteRecord($tableName, $idOrKey, $where);
+            if($result){
+                return response()->json(['message'=>'Record Deleted Successfully.'])->setStatusCode(200); //delete 204 => no content, 200=>with content;
+            }else{
+                return response()->json(['error'=>'Record {'.$idOrKey.'} Not Found in object {'.$tableName.'}'])->setStatusCode(404); //delete 204 => no content, 200=>with content;
+            }
         } catch(Exception $ex){
             throw $ex;
         }
-        return 'true';
     }
 
     public function InsertRecord(Request $request, $tableName){
         $data = $request->all();
+        $responsibilityId = 'sres45o0ajqziwbsmp937nyu';
+
         try {
             if(empty($tableName)){
-                return "Object not found!";
+                return response()->json('Object not found!')->setStatusCode(404);
             }
             $metadata = MetadataUtils::CallMetaData($request, $tableName);
+
+            // getResponsibilityMetadat of objects (ie. 'account')
+            $getResponsibilityMetadata = MetadataUtils::GetResponsibility($request, $responsibilityId);
+
+            // CheckResponsibility
+            $checkResponsibility = MetadataUtils::ValidateResponsibility($request, $getResponsibilityMetadata, $metadata, $tableName);
+
             $datas = MetadataUtils::ValidateRequest($request, $metadata, $tableName, $data);
             if(isset($datas)){
                 $result = DbUtils::generateInsert($tableName, $datas);
@@ -81,16 +132,25 @@ class DataController extends Controller{
 
     public function UpdateRecord(Request $request, $tableName, $idOrKey){
         $data = $request->all();
+        $responsibilityId = 'sres45o0ajqziwbsmp937nyu';
+
         try {
             if(empty($tableName)){
-                return "Object not found!";
+                return response()->json('Object not found!')->setStatusCode(404);
             }
             $metadata = MetadataUtils::CallMetaData($request, $tableName);
+
+            // getResponsibilityMetadat of objects (ie. 'account')
+            $getResponsibilityMetadata = MetadataUtils::GetResponsibility($request, $responsibilityId);
+
+            // CheckResponsibility
+            $checkResponsibility = MetadataUtils::ValidateResponsibility($request, $getResponsibilityMetadata, $metadata, $tableName);
+
             $data = MetadataUtils::ValidateRequest($request, $metadata, $tableName, $data);
 
             $result = DbUtils::generateUpdateRecord($request, $tableName, $idOrKey);
             $updatedRecord = DbUtils::generateQuery($tableName ,$idOrKey);
-            if($updatedRecord){
+            if($result){
                 return response()->json($updatedRecord)->setStatusCode(200);
             }else{
                 return response()->json(['error'=>$updatedRecord])->setStatusCode(500);
@@ -99,5 +159,12 @@ class DataController extends Controller{
             throw $ex;
         }
     }
+
+
+    public function CheckResponsibility($request, $responsibilityId){
+        $responsibilityId = 'sres45o0ajqziwbsmp937nyu';
+        MetadataUtils::GetResponsibility($request, $responsibilityId);
+    }
+
 
 }
