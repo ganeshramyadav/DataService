@@ -4,6 +4,7 @@ namespace App\Utils;
 use StackUtil\Utils\ApiUtils;
 use StackUtil\Utils\Utility;
 use StackUtil\Utils\DbUtils;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Exception;
 
 class MetadataUtils {
@@ -40,7 +41,7 @@ class MetadataUtils {
     }
 
     public static function ValidateRequest($request, $metadata, $objectName, $data = null){
-        $method = $request->getMethod(); // 'POST'
+        $method = $request->getMethod();
         $validate = false;
 
         switch ($method) {
@@ -139,4 +140,70 @@ class MetadataUtils {
         }
         return $metadata;
     }
+
+    public static function GetResponsibility($request, $ersponsibilityId)
+    {
+        $method = $request->getMethod();
+        $Url = env('METADATA_URL');
+        $headers[] = 'Content-Type: application/json';
+        $headers[] = 'Authorization: '.$request->header('Authorization');
+        $headers[] = 'skipAuth: ture';
+
+        $result = ApiUtils::Request('GET', $Url.'/metadata/v1/responsibility/'.$ersponsibilityId, $headers, null);
+        $metadata = $result->getData(true);
+
+        if(isset($metadata['error'])){
+            throw new Exception($metadata['error'],$metadata['status']);
+        }
+        return $metadata;
+    }
+
+    public static function ValidateResponsibility($request, $getResMetadatas, $metadata, $objName)
+    {
+        $method = $request->getMethod();
+
+        $object = self::GetObject($metadata, $objName);
+        $objectResponsibility = Utility::objArraySearch($getResMetadatas['object__r'], 'object_id', $object['id']);
+
+        if(!isset($objectResponsibility)){
+            throw new Exception('Not Authorized to perform operation for {'.$objName.'} object');
+        }
+
+        if($objectResponsibility['active'] === 0){
+            throw new Exception('Insufficient permission for {'.$objName.'} object ');
+        }
+
+        switch ($method){
+            case 'GET':
+                if($objectResponsibility['readable'] === 0){
+                    throw new Exception('Not Authorized to perform read operation for {'.$objName.'} object');
+                }
+                break;
+            case 'POST':
+                if($objectResponsibility['writable'] === 0){
+                    throw new Exception('Not Authorized to perform write operation for {'.$objName.'} object');
+                }
+                break;
+            case 'PATCH':
+                if($objectResponsibility['updatable'] === 0){
+                    throw new Exception('Not Authorized to perform update operation for {'.$objName.'} object');
+                }
+                break;
+            case "DELETE":
+                if($objectResponsibility['deletable'] === 0){
+                    throw new Exception('Not Authorized to perform delete operation for {'.$objName.'} object');
+                }
+                break;
+        }
+    }
+
+    public static function GetUserDetails($request)
+    {
+        $token = $request->header('Authorization');
+        $explode = explode('Bearer ', $token);
+        // return $explode[1];
+        // $token = JWTAuth::getToken();
+        return $apy = JWTAuth::getPayload($explode[1])->toArray();
+    }
+
 }
