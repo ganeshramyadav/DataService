@@ -6,6 +6,8 @@ use StackUtil\Utils\Utility;
 use StackUtil\Utils\DbUtils;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Exception;
+use StackUtil\Utils\Utility as StackUtilUtility;
+// use Tymon\JWTAuth\Facades\JWTAuth;
 
 class MetadataUtils {
     public static function GetObject($metadata,$objectName){
@@ -130,7 +132,7 @@ class MetadataUtils {
         $Url = env('METADATA_URL');
         $headers[] = 'Content-Type: application/json';
         $headers[] = 'Authorization: '.$request->header('Authorization');
-        $headers[] = 'skipAuth: ture';
+        $headers[] = 'skipAuth: true';
 
         $result = ApiUtils::Request('GET', $Url.'/metadata/v1?key='.$objectName, $headers, null);
         $metadata = $result->getData(true);
@@ -201,9 +203,17 @@ class MetadataUtils {
     {
         $token = $request->header('Authorization');
         $explode = explode('Bearer ', $token);
-        // return $explode[1];
-        // $token = JWTAuth::getToken();
         return $apy = JWTAuth::getPayload($explode[1])->toArray();
+    }
+
+    public static function GetResponsibilityId($request)
+    {
+        $token = $request->header('Authorization');
+        $token = Utility::getBearerToken($token);
+        $token = JWTAuth::setToken($token);
+        $apy = JWTAuth::getPayload($token)->toArray();
+
+        return $apy;
     }
 
 }

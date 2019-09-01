@@ -85,7 +85,7 @@ $app->routeMiddleware([
 | totally optional, so you are not required to uncomment this line.
 |
 */
-
+$app->register(\Illuminate\Redis\RedisServiceProvider::class);
 // $app->register(App\Providers\AppServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
@@ -102,11 +102,11 @@ $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
 |
 */
 $app->middleware([
-     
+
     'Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse'  // <--- added
 ]);
 
-$app->bind('Illuminate\Contracts\Cookie\QueueingFactory', 'cookie'); 
+$app->bind('Illuminate\Contracts\Cookie\QueueingFactory', 'cookie');
 
 
 $app->router->group([
