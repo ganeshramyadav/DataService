@@ -45,9 +45,9 @@ class Authenticate
     public function handle($request, Closure $next, $guard = null)
     {
         $result = $this->callIdentityCurlService($request);
-        $result = json_decode($result);
+        $result = json_decode($result,true);
         $response = $next($request);
-        $userId = $result->id;
+        $userId = $result['id'];
         Authenticate::history($request, $response,  $userId);
         return $response;
     }
